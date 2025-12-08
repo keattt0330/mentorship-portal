@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { api } from '../services/api';
+import { api } from '../../../frontend/src/services/api';
 
 export default function Login() {
 	const [formData, setFormData] = useState({
@@ -39,10 +39,10 @@ export default function Login() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
+		<div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
 			<div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
 				<div className="text-center mb-8">
-					<h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+					<h1 className="text-3xl font-bold bg-linear-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">
 						Welcome Back
 					</h1>
 					<p className="text-gray-600 mt-2">Sign in to continue your journey</p>
