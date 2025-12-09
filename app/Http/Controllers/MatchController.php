@@ -63,4 +63,16 @@ class MatchController extends Controller
 
 		return response()->json(['message' => 'Swipe recorded', 'matched' => false]);
 	}
+
+	public function matches(Request $request)
+	{
+		$user = Auth::user();
+
+		$matches = UserMatch::where('user_id', $user->id)
+			->where('status', 'matched')
+			->with('candidate.profile')
+			->get();
+
+		return response()->json($matches);
+	}
 }
