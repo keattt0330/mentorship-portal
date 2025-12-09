@@ -4,14 +4,19 @@ import {
     MessageSquare, Search, Plus, Heart, 
     MoreVertical, Clock, Hash, TrendingUp, User as UserIcon, X 
 } from 'lucide-react';
-import { api } from './services/api';
-import Button from './components/Button';
+import toast, { Toaster } from 'react-hot-toast'; // Import Toast
+import { api } from './services/api'; // Ensure this path is correct
+import Button from './components/Button'; // Ensure you have this component
 
 export default function Forum() {
     const [posts, setPosts] = useState([]);
     const [newPost, setNewPost] = useState({ title: '', content: '' });
     const [showForm, setShowForm] = useState(false);
-    const [loading, setLoading] = useState(true);
+    
+    // Loading states
+    const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     const [activeTab, setActiveTab] = useState('latest');
 
     const trendingTags = ['#ComputerScience', '#BiologyResearch', '#Internships', '#CalculusHelp'];
@@ -22,34 +27,62 @@ export default function Forum() {
 
     const loadPosts = async () => {
         try {
-            setLoading(true);
+            setIsLoadingPosts(true);
             const data = await api.get('forum');
             setPosts(data);
         } catch (error) {
             console.error('Failed to load posts', error);
+            toast.error("Failed to load discussions.");
         } finally {
-            setLoading(false);
+            setIsLoadingPosts(false);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (isSubmitting) return; // Prevent double clicking
+        
+        // simple validation
+        if (!newPost.title.trim() || !newPost.content.trim()) {
+            toast.error("Please fill in all fields");
+            return;
+        }
+
+        setIsSubmitting(true);
+        const toastId = toast.loading('Posting discussion...');
+
         try {
-            await api.post('/forum', newPost);
+            // This calls the api.post method we just added to api.js
+            await api.post('forum', newPost); 
+            
+            // Reset form
             setNewPost({ title: '', content: '' });
             setShowForm(false);
+            
+            // Show success and reload list
+            toast.success('Discussion posted successfully!', { id: toastId });
             loadPosts();
+
         } catch (error) {
             console.error('Failed to create post', error);
+            // Show error message from backend if available
+            const message = error.message || 'Failed to create post';
+            toast.error(message, { id: toastId });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div className="min-h-screen bg-slate-50">
+            {/* Notification Toaster */}
+            <Toaster position="top-right" />
+
             <div className="py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    {/* --- PAGE HEADER --- */}
+                    {/* PAGE HEADER */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-slate-900">Community Forum</h1>
@@ -69,13 +102,13 @@ export default function Forum() {
                         </div>
                     </div>
 
-                    {/* --- MAIN GRID LAYOUT --- */}
+                    {/* MAIN GRID */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         
-                        {/* LEFT COLUMN: Main Feed (Spans 2 columns) */}
+                        {/* LEFT COLUMN: Main Feed */}
                         <div className="lg:col-span-2 space-y-6">
                             
-                            {/* 1. Create Post Card */}
+                            {/* Create Post Card */}
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                                 {!showForm ? (
                                     <div 
@@ -111,6 +144,7 @@ export default function Forum() {
                                             onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
                                             required
                                             autoFocus
+                                            disabled={isSubmitting}
                                         />
                                         <textarea
                                             className="w-full h-32 resize-none border-none focus:ring-0 px-0 text-slate-600 placeholder-slate-400 outline-none"
@@ -118,24 +152,26 @@ export default function Forum() {
                                             value={newPost.content}
                                             onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
                                             required
+                                            disabled={isSubmitting}
                                         />
                                         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
                                             <button 
                                                 type="button" 
                                                 onClick={() => setShowForm(false)}
                                                 className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
+                                                disabled={isSubmitting}
                                             >
                                                 Cancel
                                             </button>
-                                            <Button type="submit" className="w-auto px-6 py-2">
-                                                Post Discussion
+                                            <Button type="submit" className="w-auto px-6 py-2" disabled={isSubmitting}>
+                                                {isSubmitting ? 'Posting...' : 'Post Discussion'}
                                             </Button>
                                         </div>
                                     </form>
                                 )}
                             </div>
 
-                            {/* 2. Filter Tabs */}
+                            {/* Filter Tabs */}
                             <div className="flex items-center gap-6 border-b border-slate-200 px-2">
                                 {['Latest', 'Top', 'Unanswered'].map((tab) => (
                                     <button
@@ -155,9 +191,9 @@ export default function Forum() {
                                 ))}
                             </div>
 
-                            {/* 3. Posts List */}
+                            {/* Posts List */}
                             <div className="space-y-4">
-                                {loading ? (
+                                {isLoadingPosts ? (
                                     <div className="text-center py-12">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
                                         <span className="text-slate-400 text-sm">Loading discussions...</span>
@@ -179,12 +215,14 @@ export default function Forum() {
                                         >
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex items-center gap-3">
-                                                    {/* Avatar Placeholder */}
+                                                    {/* Avatar */}
                                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                                                        {post.user.name.charAt(0)}
+                                                        {post.user?.name ? post.user.name.charAt(0).toUpperCase() : 'U'}
                                                     </div>
                                                     <div>
-                                                        <div className="font-semibold text-slate-900 text-sm">{post.user.name}</div>
+                                                        <div className="font-semibold text-slate-900 text-sm">
+                                                            {post.user?.name || 'Unknown User'}
+                                                        </div>
                                                         <div className="text-xs text-slate-500 flex items-center gap-1">
                                                             <Clock size={12} />
                                                             {new Date(post.created_at).toLocaleDateString()}
@@ -206,11 +244,7 @@ export default function Forum() {
                                             <div className="flex items-center gap-6 border-t border-slate-100 pt-4">
                                                 <div className="flex items-center gap-2 text-slate-500 text-sm group-hover:text-indigo-600 transition-colors">
                                                     <MessageSquare size={18} />
-                                                    <span className="font-medium">{post.comments_count}</span> Comments
-                                                </div>
-                                                <div className="flex items-center gap-2 text-slate-500 text-sm group-hover:text-pink-600 transition-colors">
-                                                    <Heart size={18} />
-                                                    <span className="font-medium">12</span> Likes
+                                                    <span className="font-medium">{post.comments_count || 0}</span> Comments
                                                 </div>
                                                 <div className="flex-1 text-right">
                                                     <span className="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-full font-medium">
@@ -224,10 +258,10 @@ export default function Forum() {
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: Sidebar (Hidden on mobile) */}
+                        {/* RIGHT COLUMN: Sidebar */}
                         <div className="hidden lg:block space-y-6">
                             
-                            {/* Stats Card */}
+                            {/* Stats */}
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                                 <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
                                     <TrendingUp size={20} className="text-indigo-600" />
@@ -242,21 +276,6 @@ export default function Forum() {
                                         <div className="text-2xl font-bold text-slate-900">342</div>
                                         <div className="text-xs text-slate-500 font-medium">Online</div>
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Trending Tags */}
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                    <Hash size={20} className="text-indigo-600" />
-                                    Trending Topics
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {trendingTags.map(tag => (
-                                        <span key={tag} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm rounded-lg cursor-pointer transition-colors">
-                                            {tag}
-                                        </span>
-                                    ))}
                                 </div>
                             </div>
 

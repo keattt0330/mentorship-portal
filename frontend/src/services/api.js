@@ -1,8 +1,14 @@
-// Use the same origin (host:port) so API calls work from any deployment
-// e.g., http://localhost:8080 (Docker), http://localhost:8000 (php artisan serve), etc.
+// src/services/api.js
+
+// NOTE: If your Laravel backend is running on port 8000, use this URL.
+// If you are using Docker/Nginx where everything is on the same port, use window.location.origin + '/api'
+
 const API_URL = `${window.location.origin}/api`;
 
 export const api = {
+    
+    // --- AUTHENTICATION METHODS ---
+
     async register(data) {
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
@@ -12,7 +18,6 @@ export const api = {
             },
             body: JSON.stringify(data),
         });
-
 
         if (!response.ok) {
             const error = await response.json();
@@ -40,7 +45,8 @@ export const api = {
         return response.json();
     },
 
-    async logout(token) {
+    async logout() {
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/logout`, {
             method: 'POST',
             headers: {
@@ -49,10 +55,17 @@ export const api = {
             },
         });
 
-        return response.json();
+        // Logout often returns 204 No Content, so we might not get JSON back
+        if (!response.ok) {
+             // Handle error purely if status is bad
+             console.error("Logout failed");
+        }
+        
+        return true;
     },
 
-    async getUser(token) {
+    async getUser() {
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/user`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -67,19 +80,95 @@ export const api = {
         return response.json();
     },
 
-	async get(endpoint){
-		const response = await fetch(`${API_URL}/${endpoint}`, {
-			headers: {
-				'Authorization': `Bearer ${localStorage.getItem('token')}`,
-				'Accept': 'application/json',
-			}
-		});
+    // --- DATA METHODS (CRUD) ---
 
-		if (!response.ok) {
-			const error = await response.json();
-			throw error;
-		}
+    async get(endpoint) {
+        const token = localStorage.getItem('token');
+        // Remove leading slash if user provided one to avoid double slashes (optional safeguard)
+        const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
 
-		return response.json();
-	}
+        const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw error;
+        }
+
+        return response.json();
+    },
+
+    // THIS WAS THE MISSING METHOD CAUSING YOUR CRASH
+    async post(endpoint, data) {
+        const token = localStorage.getItem('token');
+        const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+
+        const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw error;
+        }
+
+        return response.json();
+    },
+
+    // Added PUT for editing (Future proofing)
+    async put(endpoint, data) {
+        const token = localStorage.getItem('token');
+        const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+
+        const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw error;
+        }
+
+        return response.json();
+    },
+
+    // Added DELETE (Future proofing)
+    async delete(endpoint) {
+        const token = localStorage.getItem('token');
+        const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+
+        const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw error;
+        }
+
+        return response.json();
+    }
 };
