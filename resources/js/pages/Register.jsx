@@ -42,10 +42,10 @@ export default function Register() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
+		<div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
 			<div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
 				<div className="text-center mb-8">
-					<h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+					<h1 className="text-3xl font-bold bg-linear-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">
 						Join STEM Portal
 					</h1>
 					<p className="text-gray-600 mt-2">Create your account to get started</p>
