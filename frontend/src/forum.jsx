@@ -35,7 +35,7 @@ export default function Forum() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/forum', newPost);
+            await api.post('forum', newPost);
             setNewPost({ title: '', content: '' });
             setShowForm(false);
             loadPosts();
