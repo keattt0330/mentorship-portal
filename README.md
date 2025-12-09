@@ -29,9 +29,9 @@ A collaborative platform for STEM students to find mentors and peers.
 
 3. **Migrate Database Schema**:
     ```powershell
-    docker compose exec laravel.test php artisan migrate
+    docker compose exec laravel.test php artisan migrate --seed
     ```
-    This creates all database tables.
+    This creates all database tables and seed the database.
 
 4. **Seed Sample Data** (optional but recommended):
     ```powershell
