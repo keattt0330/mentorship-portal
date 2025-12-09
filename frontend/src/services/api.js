@@ -1,6 +1,10 @@
-// Use the same origin (host:port) so API calls work from any deployment
-// e.g., http://localhost:8080 (Docker), http://localhost:8000 (php artisan serve), etc.
-const API_URL = `${window.location.origin}/api`;
+// Use environment variable if available, otherwise use same origin
+// Environment variable is set in .env file: VITE_API_URL
+// Falls back to current origin for backward compatibility
+const API_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : `${window.location.origin}/api`;
+
 
 export const api = {
     async register(data) {
@@ -73,6 +77,26 @@ export const api = {
 				'Authorization': `Bearer ${localStorage.getItem('token')}`,
 				'Accept': 'application/json',
 			}
+		});
+
+		if (!response.ok) {
+			const error = await response.json();
+			throw error;
+		}
+
+		return response.json();
+	},
+
+	async post(endpoint, data = {}){
+		const hasBody = data && Object.keys(data).length > 0;
+		const response = await fetch(`${API_URL}/${endpoint}`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${localStorage.getItem('token')}`,
+				'Accept': 'application/json',
+			},
+			body: hasBody ? JSON.stringify(data) : undefined,
 		});
 
 		if (!response.ok) {

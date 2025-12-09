@@ -19,7 +19,7 @@ export default function ProjectsDirectory() {
 
     const fetchProjects = async () => {
         try {
-            const data = await api.get('/projects');
+            const data = await api.get('projects');
             setProjects(data);
         } catch (error) {
             console.error('Failed to fetch projects', error);
@@ -31,7 +31,7 @@ export default function ProjectsDirectory() {
     const handleJoin = async (projectId) => {
         setJoiningId(projectId);
         try {
-            await api.post(`/projects/${projectId}/join`);
+            await api.post(`projects/${projectId}/join`);
             fetchProjects(); 
             alert("Successfully joined the project!");
         } catch (error) {
