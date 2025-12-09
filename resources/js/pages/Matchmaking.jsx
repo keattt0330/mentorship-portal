@@ -24,6 +24,7 @@ export default function Matchmaking() {
 			const data = await response.json();
 			setCandidates(data);
 			setLoading(false);
+			console.log(data);
 		} catch (error) {
 			console.error('Failed to fetch candidates', error);
 			setLoading(false);

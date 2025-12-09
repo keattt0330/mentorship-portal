@@ -24,6 +24,7 @@ class MatchController extends Controller
 				// Simple logic: if mentor, show students; if student, show mentors
 				// For now, just show everyone else
 			})
+			->with('projectsOwned') // Eager load projects owned by the user
 			->limit(10)
 			->get();
 
